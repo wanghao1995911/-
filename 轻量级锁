@@ -1,0 +1,15 @@
+轻量级锁采用CAS避免额外开销与锁冲突的可能性
+CAS原理
+public final int getAndIncrement() {
+        for (;;) {
+            int current = get();
+            int next = current + 1;
+            if (compareAndSet(current, next))
+                return current;
+        }
+}
+cas只适合线程冲突较少的情况下使用，在冲突较多情况下若发生自旋会浪费较多cpu资源
+cas发生在硬件上操作，不需要进入内核，小概率产生自旋。。
+对于资源竞争严重的情况，CAS自旋的概率会比较大，从而浪费更多的CPU资源，效率低于锁
+CAS在判断两次读取的值不一样的时候会放弃操作，但为了保证结果正确，通常都会继续尝试循环再次发起CAS操作，
+如Jdk1.6版本的AtomicInteger类的getAndIncrement()方法，就是利用了自旋实现多次尝试：
